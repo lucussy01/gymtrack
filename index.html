@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 /* ================================================================
-   ⚙️ CONFIGURACIÓN DE SUPABASE — pegá acá tus datos (ver tutorial)
+   ⚙️ CONFIGURACIÓN DE SUPABASE — pegá acá tus datos
    Si los dejás vacíos, la app funciona sin cuentas (solo en este dispositivo).
    ================================================================ */
 const SUPABASE_URL = 'https://haodufwjpjwwvguqoevj.supabase.co';   // ej: 'https://abcdefgh.supabase.co'
@@ -33,13 +33,14 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
   main{padding:22px 28px 60px;max-width:1400px}
   .btn{background:var(--card2);color:var(--txt);border:1px solid var(--line);padding:9px 14px;border-radius:9px;cursor:pointer;font-size:14px;font-family:inherit;font-weight:500}
   .btn:hover{border-color:var(--mut)}
-  .btn:disabled{opacity:.6;cursor:wait}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
   .btn.primary{background:var(--acc);border-color:var(--acc);color:#04130a;font-weight:700}
   .btn.primary:hover{background:var(--acc2)}
   .btn.danger{color:var(--red)}
   .btn.sm{padding:5px 9px;font-size:13px}
   input,select{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:14px;width:100%;font-family:inherit}
   input:focus,select:focus{outline:none;border-color:var(--acc)}
+  input.invalid{border-color:var(--red)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
   .card h3{margin:0 0 12px;font-size:15px}
   .tablewrap{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:auto}
@@ -47,6 +48,9 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
   th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
   th{background:var(--card2);color:var(--mut);font-weight:600;position:sticky;top:0;z-index:1;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
   tr.dayrow td{background:var(--accbg);color:var(--acc);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .dayhead{display:flex;align-items:center;gap:12px}
+  .addday{text-transform:none;letter-spacing:0;background:transparent;color:var(--acc);border-color:#22c55e55;padding:3px 9px;font-size:12px;font-weight:600}
+  .addday:hover{background:#22c55e22;border-color:var(--acc)}
   tr.click{cursor:pointer}
   tr.click:hover td{background:var(--card2)}
   tr.sel td{background:#1a2230}
@@ -70,6 +74,7 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
   .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{background:var(--card2);border:1px solid var(--line);color:var(--mut);padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px;font-family:inherit}
   .chip.active{background:var(--acc);color:#04130a;border-color:var(--acc)}
+  .chip.add{border-style:dashed;color:var(--acc);border-color:#22c55e77;background:transparent}
   .weekpick{display:flex;align-items:center;gap:8px}
   .weekpick b{min-width:90px;text-align:center}
   .excard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
@@ -92,6 +97,27 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
   .sync{font-size:12px;padding:7px 11px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--mut);white-space:nowrap;cursor:pointer;font-family:inherit}
   .sync.ok{color:var(--acc)} .sync.wait{color:var(--amber)} .sync.err{color:var(--red)}
   #userBtn{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* modal agregar */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+  .modal.hidden{display:none}
+  .modalbox{width:100%;max-width:500px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-height:94vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modalbox h3{margin:0;font-size:18px}
+  .modalbox form{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .flabel{font-size:12px;color:var(--mut);display:flex;flex-direction:column;gap:5px;font-weight:600}
+  .daypick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .daybtn{background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:9px 2px;cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .daybtn:hover{border-color:var(--mut)}
+  .daybtn small{font-weight:500;font-size:10px;color:var(--mut)}
+  .daybtn.active{background:var(--acc);border-color:var(--acc);color:#04130a}
+  .daybtn.active small{color:#04130a}
+  .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .mbtns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#252a35;border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 16px;display:flex;gap:10px;align-items:center;z-index:250;box-shadow:0 12px 40px rgba(0,0,0,.5);font-size:14px;max-width:calc(100% - 32px)}
+  .toast.hidden{display:none}
+  .toast span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toast button{background:var(--accbg);border:none;color:var(--acc);font-weight:700;cursor:pointer;font-size:14px;padding:8px 12px;border-radius:8px;font-family:inherit;white-space:nowrap}
+  .toast .tx{background:none;color:var(--mut);padding:8px}
   /* login */
   .auth{position:fixed;inset:0;background:radial-gradient(circle at 30% 20%,#13261b 0,var(--bg) 55%);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
   .auth.hidden{display:none}
@@ -125,9 +151,11 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
     .top{padding:16px}
     main{padding:16px 16px 100px}
     .timer{left:16px;right:16px;bottom:78px;width:auto}
+    .toast{top:14px;bottom:auto;width:calc(100% - 24px)}
     .g2{grid-template-columns:1fr}
     .logrow{grid-template-columns:1fr 1fr}
     .rm{grid-column:span 2;text-align:left}
+    .mgrid{grid-template-columns:1fr 1fr}
     #userBtn{max-width:130px}
   }
 </style>
@@ -140,12 +168,47 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
       <div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
       <div class="row">
         <button class="sync" id="sync" title="Tocá para sincronizar ahora"></button>
+        <button class="btn" id="undoBtn" disabled title="Nada para deshacer">↩️ Deshacer</button>
         <button class="btn" id="userBtn" style="display:none" title="Cerrar sesión"></button>
         <button class="btn primary" id="xlsBtn">⬇ Excel</button>
       </div>
     </header>
     <main id="main"></main>
   </div>
+</div>
+
+<!-- MODAL: AGREGAR EJERCICIO -->
+<div class="modal hidden" id="addModal">
+  <div class="modalbox">
+    <div class="row between"><h3>➕ Nuevo ejercicio</h3><button class="btn sm" type="button" id="mClose">✕</button></div>
+    <form id="addForm" autocomplete="off">
+      <div class="flabel">¿Para qué día? <span style="color:var(--acc)" id="mDayName"></span>
+        <div class="daypick" id="mDays"></div>
+      </div>
+      <label class="flabel">Ejercicio *<input id="mNombre" placeholder="Ej: Press de banca plano" list="dlEj"></label>
+      <label class="flabel">Grupo muscular<input id="mGrupo" placeholder="Ej: Pecho" list="dlGrupos"></label>
+      <div class="mgrid">
+        <label class="flabel">Series<input id="mSeries" type="number" min="1" value="3"></label>
+        <label class="flabel">Reps<input id="mReps" value="10" placeholder="8-10"></label>
+        <label class="flabel">Descanso (s)<input id="mDesc" type="number" min="0" step="15" value="90"></label>
+        <label class="flabel">RPE<input id="mRpe" type="number" min="1" max="10" value="8"></label>
+      </div>
+      <label class="flabel">Notas (opcional)<input id="mNotas" placeholder="Técnica, agarre, etc."></label>
+      <div class="mbtns">
+        <button class="btn" type="button" id="mMore">Agregar y cargar otro</button>
+        <button class="btn primary" type="submit">Agregar</button>
+      </div>
+    </form>
+    <datalist id="dlGrupos"></datalist>
+    <datalist id="dlEj"></datalist>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast">
+  <span id="toastMsg"></span>
+  <button id="toastUndo">↩️ Deshacer</button>
+  <button class="tx" id="toastClose">✕</button>
 </div>
 
 <!-- LOGIN -->
@@ -181,12 +244,14 @@ const SUPABASE_KEY = 'sb_publishable_VSM0PE51yvJyWlJuC4B2Lg_Mp2gq27Z';   // tu "
 
 <script>
 /* =================== DATOS =================== */
+const $ = id => document.getElementById(id);
 const CLOUD = !!(SUPABASE_URL && SUPABASE_KEY);
-const API = SUPABASE_URL.replace(/\/+$/,'');
+const API = SUPABASE_URL.trim().replace(/^(https?:\/\/[^\/]+).*$/,'$1');
 const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const KEY = 'gymtrack-v1', SKEY = 'gymtrack-session';
 const uid = () => Math.random().toString(36).slice(2,9);
 const HOY = DIAS[(new Date().getDay()+6)%7];
+const GRUPOS = ['Pecho','Espalda','Hombros','Bíceps','Tríceps','Piernas','Cuádriceps','Femorales','Glúteos','Pantorrillas','Core','Antebrazos','Trapecio','Cardio'];
 
 function ej(dia,grupo,nombre,series,reps,descanso,rpe,tempo='2-0-1',notas=''){
   return {id:uid(),dia,grupo,nombre,series,reps,descanso,rpe,tempo,notas};
@@ -223,6 +288,38 @@ function loadLocal(k){ try{ return normalize(JSON.parse(localStorage.getItem(k))
 
 let state = null;
 let view = 'inicio', entDia = HOY, progEx = null, charts = [];
+
+/* =================== DESHACER =================== */
+let undoStack = [], editSnap = null, toastT = null;
+function snapshot(label, data){
+  undoStack.push({label, data: data ?? JSON.stringify(state)});
+  if(undoStack.length > 30) undoStack.shift();
+  updateUndo();
+}
+function undo(){
+  if(!state) return;
+  const u = undoStack.pop();
+  if(!u){ toast('No hay nada para deshacer'); return; }
+  state = normalize(JSON.parse(u.data)); editSnap = null;
+  save(); render(); updateUndo();
+  toast('↩️ Deshecho: '+u.label);
+}
+function clearUndo(){ undoStack = []; editSnap = null; updateUndo(); }
+function updateUndo(){
+  const b = $('undoBtn'), top = undoStack[undoStack.length-1];
+  b.disabled = !top;
+  b.title = top ? `Deshacer: ${top.label} (Ctrl+Z)` : 'Nada para deshacer';
+}
+function toast(msg, canUndo){
+  $('toastMsg').textContent = msg;
+  $('toastUndo').style.display = canUndo ? '' : 'none';
+  $('toast').classList.remove('hidden');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>$('toast').classList.add('hidden'), canUndo ? 8000 : 3000);
+}
+$('toastUndo').onclick = () => { $('toast').classList.add('hidden'); undo(); };
+$('toastClose').onclick = () => $('toast').classList.add('hidden');
+$('undoBtn').onclick = undo;
 
 /* =================== NUBE (Supabase) =================== */
 let session = null;
@@ -302,14 +399,14 @@ async function pull(){
     setSync('load');
     const row = await cloudLoad();
     if(row && row.data && !dirty){
-      if(JSON.stringify(row.data)!==JSON.stringify(state)){ state=normalize(row.data); writeCache(); render(); }
+      if(JSON.stringify(row.data)!==JSON.stringify(state)){ state=normalize(row.data); clearUndo(); writeCache(); render(); }
     }
     setSync('ok');
   }catch(e){ if(e.message==='nosession') onAuthLost(); else setSync('err'); }
 }
 
 async function enterApp(){
-  hideAuth(); updateUser();
+  hideAuth(); updateUser(); clearUndo();
   const cached = loadLocal(cacheKey());
   state = cached;
   if(state) render(); else showMsgScreen('🔄 Cargando tu rutina…');
@@ -320,7 +417,6 @@ async function enterApp(){
     if(row && normalize(row.data)){
       state = normalize(row.data); writeCache(); render(); setSync('ok');
     } else {
-      // Cuenta nueva: sube lo que haya en este dispositivo (o la rutina de ejemplo)
       state = cached || loadLocal(KEY) || loadLocal('rutina-gym-v1') || defaults();
       render(); save(); await flush();
     }
@@ -330,7 +426,7 @@ async function enterApp(){
     if(!state) showMsgScreen('⚠️ No se pudo cargar tu rutina. Revisá tu conexión.', true);
   }
 }
-function onAuthLost(){ setSession(null); state=null; updateUser(); showAuth('Tu sesión expiró. Ingresá de nuevo.','err'); }
+function onAuthLost(){ setSession(null); state=null; clearUndo(); updateUser(); showAuth('Tu sesión expiró. Ingresá de nuevo.','err'); }
 async function logout(){
   if(!confirm(`¿Cerrar sesión de ${session.user.email}?`)) return;
   await flush();
@@ -338,17 +434,17 @@ async function logout(){
   if(!dirty){ try{ localStorage.removeItem(cacheKey()); localStorage.removeItem(pendKey()); }catch(e){} }
   authReq('logout',{},tok).catch(()=>{});
   clearTimeout(saveTimer); dirty=false;
-  setSession(null); state=null; updateUser(); showAuth();
+  setSession(null); state=null; clearUndo(); updateUser(); showAuth();
 }
 
 const SYNC = {local:['','💾 Solo este dispositivo'],ok:['ok','☁️ Sincronizado'],wait:['wait','⏳ Guardando…'],load:['wait','🔄 Sincronizando…'],err:['err','⚠️ Sin conexión']};
-function setSync(k){ const el=document.getElementById('sync'); el.className='sync '+SYNC[k][0]; el.textContent=SYNC[k][1]; }
+function setSync(k){ const el=$('sync'); el.className='sync '+SYNC[k][0]; el.textContent=SYNC[k][1]; }
 function updateUser(){
-  const b=document.getElementById('userBtn');
+  const b=$('userBtn');
   if(CLOUD && session){ b.style.display=''; b.textContent='👤 '+session.user.email; } else b.style.display='none';
 }
-document.getElementById('sync').onclick = () => { if(!CLOUD||!session) return; dirty ? flush() : pull(); };
-document.getElementById('userBtn').onclick = logout;
+$('sync').onclick = () => { if(!CLOUD||!session) return; dirty ? flush() : pull(); };
+$('userBtn').onclick = logout;
 document.addEventListener('visibilitychange', ()=>{
   if(!CLOUD || !session) return;
   if(document.hidden) flush(true); else pull();
@@ -357,7 +453,6 @@ window.addEventListener('online', ()=>{ if(dirty) flush(); });
 
 /* ---------- Login UI ---------- */
 let authMode='login';
-const $ = id => document.getElementById(id);
 const ERR = {
   'Invalid login credentials':'Email o contraseña incorrectos.',
   'already registered':'Ese email ya tiene una cuenta. Usá “Ingresar”.',
@@ -401,7 +496,6 @@ $('forgotBtn').onclick = async ()=>{
   try{ await authReq('recover',{email}); setMsg('✔ Si el email existe, te llegó un link para cambiar la contraseña.','ok'); }
   catch(err){ setMsg(tr(err.message),'err'); }
 };
-// Links de email (confirmación de cuenta / recuperar contraseña) vuelven con los tokens en la URL
 async function handleHash(){
   const h = location.hash.slice(1); if(!h) return null;
   const p = new URLSearchParams(h);
@@ -442,17 +536,78 @@ const volWeek = w => state.exercises.reduce((a,e)=>a+volEx(e,w),0);
 const fmt = (v,d=1) => v==null||v==='' ? '—' : (Math.round(v*10**d)/10**d).toLocaleString('es');
 const weeksWithData = () => { let c=0; for(let w=1;w<=state.weeks;w++) if(state.exercises.some(e=>num(getLog(e.id,w).p)!=null)) c++; return c; };
 const bodySorted = () => [...state.body].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+const exName = id => (state.exercises.find(x=>x.id===id)?.nombre) || 'ejercicio';
 
-function mkChart(id,cfg){ const c=document.getElementById(id); if(!c || !window.Chart) return; charts.push(new Chart(c,cfg)); }
+function mkChart(id,cfg){ const c=$(id); if(!c || !window.Chart) return; charts.push(new Chart(c,cfg)); }
 if(window.Chart){ Chart.defaults.color='#8b92a3'; Chart.defaults.borderColor='#2a2f3a'; Chart.defaults.font.family='system-ui,sans-serif'; }
 
-function groupedRows(cols,list,rowFn){
-  if(!list.length) return `<tr><td colspan="${cols}" class="empty">No hay ejercicios todavía. Agregalos en la sección “Rutina”.</td></tr>`;
+function groupedRows(cols,list,rowFn,addBtn){
+  if(!list.length) return `<tr><td colspan="${cols}" class="empty">No hay ejercicios todavía.<br><br><button class="btn primary" data-action="add-ex">+ Agregar ejercicio</button></td></tr>`;
   let h='', last=null;
-  list.forEach(e=>{ if(e.dia!==last){ h+=`<tr class="dayrow"><td colspan="${cols}">${e.dia}</td></tr>`; last=e.dia; } h+=rowFn(e); });
+  list.forEach(e=>{
+    if(e.dia!==last){
+      h+=`<tr class="dayrow"><td colspan="${cols}">${addBtn
+        ? `<div class="dayhead"><span>${e.dia}</span><button class="btn addday" data-action="add-ex" data-dia="${e.dia}">+ Agregar</button></div>`
+        : e.dia}</td></tr>`;
+      last=e.dia;
+    }
+    h+=rowFn(e);
+  });
   return h;
 }
 const weekPicker = () => `<div class="weekpick"><button class="btn sm" data-action="wk-">◀</button><b>Semana ${state.curWeek}</b><button class="btn sm" data-action="wk+">▶</button></div>`;
+
+/* =================== MODAL AGREGAR EJERCICIO =================== */
+let mDay = 'Lunes';
+function openAdd(dia){
+  if(!state) return;
+  mDay = DIAS.includes(dia) ? dia : (view==='entrenar' ? entDia : HOY);
+  $('addForm').reset();
+  $('mNombre').classList.remove('invalid');
+  const grupos = [...new Set([...GRUPOS, ...state.exercises.map(e=>e.grupo).filter(Boolean)])];
+  $('dlGrupos').innerHTML = grupos.map(g=>`<option value="${esc(g)}">`).join('');
+  $('dlEj').innerHTML = [...new Set(state.exercises.map(e=>e.nombre).filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join('');
+  renderDays();
+  $('addModal').classList.remove('hidden');
+  setTimeout(()=>$('mNombre').focus(), 50);
+}
+function closeAdd(){ $('addModal').classList.add('hidden'); }
+function renderDays(){
+  $('mDays').innerHTML = DIAS.map(d=>{
+    const n = byDay(d).length;
+    return `<button type="button" class="daybtn ${d===mDay?'active':''}" data-d="${d}">${d.slice(0,3)}<small>${n?n+' ej.':'—'}</small></button>`;
+  }).join('');
+  $('mDayName').textContent = '· '+mDay;
+}
+$('mDays').onclick = e => { const b=e.target.closest('[data-d]'); if(!b) return; mDay=b.dataset.d; renderDays(); };
+$('mClose').onclick = closeAdd;
+$('addModal').addEventListener('mousedown', e => { if(e.target.id==='addModal') closeAdd(); });
+$('mNombre').addEventListener('input', ()=> $('mNombre').classList.remove('invalid'));
+function submitAdd(keepOpen){
+  const nombre = $('mNombre').value.trim();
+  if(!nombre){ $('mNombre').classList.add('invalid'); $('mNombre').focus(); return; }
+  snapshot(`Agregar ${nombre}`);
+  state.exercises.push(ej(mDay, $('mGrupo').value.trim(), nombre,
+    num($('mSeries').value) || 3, $('mReps').value.trim() || '10',
+    num($('mDesc').value) ?? 90, num($('mRpe').value) ?? 8, '2-0-1', $('mNotas').value.trim()));
+  if(view==='entrenar') entDia = mDay;
+  save(); render();
+  toast(`✔ ${nombre} agregado al ${mDay}`, true);
+  if(keepOpen){
+    $('mNombre').value=''; $('mNotas').value='';
+    renderDays(); $('mNombre').focus();
+  } else closeAdd();
+}
+$('addForm').onsubmit = e => { e.preventDefault(); submitAdd(false); };
+$('mMore').onclick = () => submitAdd(true);
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && !$('addModal').classList.contains('hidden')){ closeAdd(); return; }
+  if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='z'){
+    if(e.target.matches('input,textarea,select') || !state || !$('addModal').classList.contains('hidden')) return;
+    e.preventDefault(); undo();
+  }
+});
 
 /* =================== NAV =================== */
 const VIEWS = {
@@ -464,10 +619,10 @@ const VIEWS = {
   corporal:   {ic:'⚖️', t:'Peso corporal', s:'Registrá tu peso corporal a lo largo del tiempo'},
 };
 function renderNav(){
-  document.getElementById('nav').innerHTML = `<div class="brand">🏋️ Gym<span>Track</span></div>` +
+  $('nav').innerHTML = `<div class="brand">🏋️ Gym<span>Track</span></div>` +
     Object.entries(VIEWS).map(([k,v])=>`<button class="navbtn ${k===view?'active':''}" data-view="${k}"><span class="ic">${v.ic}</span>${v.t}</button>`).join('');
 }
-document.getElementById('nav').addEventListener('click',e=>{
+$('nav').addEventListener('click',e=>{
   const b=e.target.closest('[data-view]'); if(!b || !state) return;
   view=b.dataset.view; render(); window.scrollTo(0,0);
 });
@@ -489,7 +644,8 @@ function vInicio(){
   <div class="grid g2" style="margin-top:14px">
     <div class="card">
       <div class="row between" style="margin-bottom:8px"><h3 style="margin:0">Hoy · ${HOY}</h3>${hoyEjs.length?`<button class="btn primary sm" data-action="go-train">Empezar ▶</button>`:''}</div>
-      ${hoyEjs.length?`<ul class="todaylist">${items}</ul>`:`<p class="mut">😴 Hoy es día de descanso según tu rutina.</p>`}
+      ${hoyEjs.length?`<ul class="todaylist">${items}</ul>`
+        :`<p class="mut">😴 Hoy es día de descanso según tu rutina.</p><button class="btn sm" data-action="add-ex" data-dia="${HOY}">+ Agregar ejercicio para hoy</button>`}
     </div>
     <div class="card">
       <h3>Volumen total por semana (kg)</h3>
@@ -523,7 +679,7 @@ function afterInicio(){
 
 function vEntrenar(){
   const days = activeDays();
-  if(!days.length) return `<div class="card empty">No hay ejercicios en tu rutina. Andá a “Rutina” para agregarlos.</div>`;
+  if(!days.length) return `<div class="card empty">No hay ejercicios en tu rutina.<br><br><button class="btn primary" data-action="add-ex">+ Agregar ejercicio</button></div>`;
   if(!days.includes(entDia)) entDia = days[0];
   const w = state.curWeek;
   const cards = byDay(entDia).map(e=>{
@@ -543,7 +699,8 @@ function vEntrenar(){
     </div>`;
   }).join('');
   return `<div class="row between" style="margin-bottom:16px">
-      <div class="chips">${days.map(d=>`<button class="chip ${d===entDia?'active':''}" data-action="dia" data-dia="${d}">${d}${d===HOY?' · hoy':''}</button>`).join('')}</div>
+      <div class="chips">${days.map(d=>`<button class="chip ${d===entDia?'active':''}" data-action="dia" data-dia="${d}">${d}${d===HOY?' · hoy':''}</button>`).join('')}
+        <button class="chip add" data-action="add-ex">+ Agregar</button></div>
       ${weekPicker()}
     </div>
     <div class="grid g2">${cards}</div>
@@ -564,7 +721,7 @@ function vRutina(){
       <td style="width:70px"><input data-f="rpe" type="number" min="1" max="10" value="${esc(e.rpe)}"></td>
       <td style="min-width:200px"><input data-f="notas" value="${esc(e.notas)}" placeholder="Notas / técnica"></td>
       <td><button class="btn sm danger" data-action="del-ex" data-id-del="${e.id}" title="Eliminar">✕</button></td>
-    </tr>`);
+    </tr>`, true);
   return `<div class="row between" style="margin-bottom:14px">
       <span class="mut" style="font-size:13px">${state.exercises.length} ejercicios · ${activeDays().length} días</span>
       <button class="btn primary" data-action="add-ex">+ Agregar ejercicio</button>
@@ -572,7 +729,7 @@ function vRutina(){
     <div class="tablewrap"><table>
       <thead><tr><th>Día</th><th>Grupo muscular</th><th>Ejercicio</th><th>Series</th><th>Reps</th><th>Descanso (s)</th><th>Tempo</th><th>RPE</th><th>Notas</th><th></th></tr></thead>
       <tbody>${rows}</tbody></table></div>
-    <p class="hint">💡 Tempo = excéntrica-pausa-concéntrica en segundos (ej. 3-1-1). RPE = esfuerzo percibido del 1 al 10 (10 = al fallo).</p>`;
+    <p class="hint">💡 ¿Te equivocaste? Usá ↩️ Deshacer (o Ctrl+Z). Tempo = excéntrica-pausa-concéntrica (ej. 3-1-1). RPE = esfuerzo del 1 al 10.</p>`;
 }
 
 function vSeguimiento(){
@@ -589,7 +746,7 @@ function vSeguimiento(){
 
 function vProgreso(){
   const list = sorted();
-  if(!list.length) return `<div class="card empty">No hay ejercicios en tu rutina.</div>`;
+  if(!list.length) return `<div class="card empty">No hay ejercicios en tu rutina.<br><br><button class="btn primary" data-action="add-ex">+ Agregar ejercicio</button></div>`;
   if(!progEx || !list.find(e=>e.id===progEx)) progEx = (list.find(e=>weightsOf(e.id).some(v=>v!=null))||list[0]).id;
   let improved=0, best=null;
   const rows = groupedRows(8, list, e=>{
@@ -665,25 +822,30 @@ function afterCorporal(){
 
 const RENDER = {inicio:[vInicio,afterInicio],entrenar:[vEntrenar],rutina:[vRutina],seguimiento:[vSeguimiento],progreso:[vProgreso,afterProgreso],corporal:[vCorporal,afterCorporal]};
 function setHeader(){
-  document.getElementById('title').textContent = VIEWS[view].ic+' '+VIEWS[view].t;
-  document.getElementById('subtitle').textContent = VIEWS[view].s;
+  $('title').textContent = VIEWS[view].ic+' '+VIEWS[view].t;
+  $('subtitle').textContent = VIEWS[view].s;
 }
 function render(){
   if(!state) return;
   charts.forEach(c=>c.destroy()); charts=[];
   renderNav(); setHeader();
   const [v,after] = RENDER[view];
-  document.getElementById('main').innerHTML = v();
+  $('main').innerHTML = v();
   if(after) after();
 }
 function showMsgScreen(txt, retry){
   charts.forEach(c=>c.destroy()); charts=[];
   renderNav(); setHeader();
-  document.getElementById('main').innerHTML = `<div class="card empty">${txt}${retry?'<br><br><button class="btn primary" data-action="retry">Reintentar</button>':''}</div>`;
+  $('main').innerHTML = `<div class="card empty">${txt}${retry?'<br><br><button class="btn primary" data-action="retry">Reintentar</button>':''}</div>`;
 }
 
 /* =================== EVENTOS =================== */
-const main = document.getElementById('main');
+const main = $('main');
+// Foto del estado antes de editar un campo (para poder deshacer la edición)
+main.addEventListener('focusin', e=>{
+  const el=e.target;
+  if(state && (el.dataset.f || el.dataset.w)) editSnap = JSON.stringify(state);
+});
 main.addEventListener('input', e=>{
   const el=e.target, holder=el.closest('[data-id]'); if(!holder || !state) return;
   const id=holder.dataset.id;
@@ -696,7 +858,16 @@ main.addEventListener('input', e=>{
 });
 main.addEventListener('change', e=>{
   const el=e.target;
-  if(el.dataset.f==='dia') render();
+  if(state && editSnap && (el.dataset.f || el.dataset.w)){
+    const now = JSON.stringify(state);
+    if(now !== editSnap){
+      const id = el.closest('[data-id]')?.dataset.id, n = exName(id);
+      const label = el.dataset.f==='dia' ? `Cambio de día de ${n}` : el.dataset.w ? `Registro S${el.dataset.w} de ${n}` : `Edición de ${n}`;
+      snapshot(label, editSnap);
+    }
+    editSnap = now;
+  }
+  if(el.dataset.f==='dia'){ render(); toast(`📅 Movido al ${el.value}`, true); }
   if(el.id==='progSel'){ progEx=el.value; render(); }
   if(el.id==='weeksSel'){ state.weeks=+el.value; state.curWeek=Math.min(state.curWeek,state.weeks); save(); render(); }
 });
@@ -712,55 +883,64 @@ main.addEventListener('click', e=>{
   else if(a==='dia'){ entDia=b.dataset.dia; render(); }
   else if(a==='timer'){ startTimer(+b.dataset.sec, b.dataset.name); }
   else if(a==='sel-ex'){ progEx=b.dataset.ex; render(); }
-  else if(a==='add-ex'){
-    state.exercises.push(ej(activeDays()[0]||'Lunes','','',3,'10',90,8)); save(); render();
-    const empty=[...document.querySelectorAll('input[data-f="nombre"]')].find(i=>!i.value); if(empty){ empty.focus(); empty.scrollIntoView({block:'center'}); }
-  }
+  else if(a==='add-ex'){ openAdd(b.dataset.dia); }
   else if(a==='del-ex'){
-    const id=b.dataset.idDel;
-    if(confirm('¿Eliminar este ejercicio y sus registros?')){ state.exercises=state.exercises.filter(x=>x.id!==id); delete state.log[id]; save(); render(); }
+    const id=b.dataset.idDel, n=exName(id);
+    snapshot(`Eliminar ${n}`);
+    state.exercises=state.exercises.filter(x=>x.id!==id); delete state.log[id];
+    save(); render(); toast(`🗑 ${n} eliminado`, true);
   }
   else if(a==='bw-add') addBody();
-  else if(a==='bw-del'){ state.body=state.body.filter(x=>x.id!==b.dataset.bid); save(); render(); }
+  else if(a==='bw-del'){
+    snapshot('Eliminar registro de peso corporal');
+    state.body=state.body.filter(x=>x.id!==b.dataset.bid); save(); render();
+    toast('🗑 Registro eliminado', true);
+  }
   else if(a==='export-json'){
     const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
     const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download='gymtrack-respaldo.json'; link.click();
   }
-  else if(a==='import-json') document.getElementById('importFile').click();
-  else if(a==='reset'){ if(confirm('¿Borrar todos tus datos y volver a la rutina de ejemplo?')){ state=defaults(); save(); render(); } }
+  else if(a==='import-json') $('importFile').click();
+  else if(a==='reset'){
+    if(confirm('¿Borrar todos tus datos y volver a la rutina de ejemplo?')){
+      snapshot('Reiniciar todo'); state=defaults(); save(); render();
+      toast('Datos reiniciados', true);
+    }
+  }
 });
 function addBody(){
-  const f=document.getElementById('bwDate').value, k=num(document.getElementById('bwKg').value);
+  const f=$('bwDate').value, k=num($('bwKg').value);
   if(!f || k==null){ alert('Ingresá una fecha y un peso válido.'); return; }
+  snapshot('Agregar peso corporal');
   state.body=state.body.filter(x=>x.fecha!==f); state.body.push({id:uid(),fecha:f,peso:k}); save(); render();
+  toast(`✔ ${fmt(k)} kg registrado`, true);
 }
-document.getElementById('importFile').addEventListener('change', e=>{
+$('importFile').addEventListener('change', e=>{
   const file=e.target.files[0]; if(!file) return;
   const rd=new FileReader();
   rd.onload=()=>{ try{ const s=normalize(JSON.parse(rd.result)); if(!s) throw 0;
-      state=s; save(); render(); alert('Respaldo importado ✔'); }
+      snapshot('Importar respaldo'); state=s; save(); render(); toast('✔ Respaldo importado', true); }
     catch(err){ alert('El archivo no es un respaldo válido.'); } };
   rd.readAsText(file); e.target.value='';
 });
 
 /* =================== TEMPORIZADOR =================== */
 const T={end:0,total:0,int:null,ctx:null};
-const tEl=id=>document.getElementById(id);
 function startTimer(sec,name){
   try{ T.ctx ??= new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
   T.total=sec; T.end=Date.now()+sec*1000;
-  tEl('tName').textContent='Descanso · '+(name||'');
-  tEl('timer').classList.remove('hidden','done');
+  $('tName').textContent='Descanso · '+(name||'');
+  $('timer').classList.remove('hidden','done');
   clearInterval(T.int); T.int=setInterval(tick,250); tick();
 }
 function tick(){
   const left=Math.max(0,Math.ceil((T.end-Date.now())/1000));
-  tEl('tClock').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
-  tEl('tBar').style.width=(T.total?left/T.total*100:0)+'%';
+  $('tClock').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+  $('tBar').style.width=(T.total?left/T.total*100:0)+'%';
   if(left<=0){
     clearInterval(T.int); T.int=null;
-    tEl('tName').textContent='¡Siguiente serie! 💪';
-    tEl('timer').classList.add('done'); beep();
+    $('tName').textContent='¡Siguiente serie! 💪';
+    $('timer').classList.add('done'); beep();
     if(navigator.vibrate) navigator.vibrate([300,150,300]);
   }
 }
@@ -771,12 +951,12 @@ function beep(){
     g.gain.setValueAtTime(.25,T.ctx.currentTime+t); g.gain.exponentialRampToValueAtTime(.001,T.ctx.currentTime+t+.25);
     o.start(T.ctx.currentTime+t); o.stop(T.ctx.currentTime+t+.26); });
 }
-tEl('tPlus').onclick=()=>{ if(!T.int){ startTimer(15,''); return; } T.end+=15000; T.total+=15; tick(); };
-tEl('tMinus').onclick=()=>{ if(T.int){ T.end-=15000; tick(); } };
-tEl('tStop').onclick=()=>{ clearInterval(T.int); T.int=null; tEl('timer').classList.add('hidden'); };
+$('tPlus').onclick=()=>{ if(!T.int){ startTimer(15,''); return; } T.end+=15000; T.total+=15; tick(); };
+$('tMinus').onclick=()=>{ if(T.int){ T.end-=15000; tick(); } };
+$('tStop').onclick=()=>{ clearInterval(T.int); T.int=null; $('timer').classList.add('hidden'); };
 
 /* =================== EXPORTAR EXCEL =================== */
-document.getElementById('xlsBtn').onclick = () => {
+$('xlsBtn').onclick = () => {
   if(!state) return;
   if(!window.XLSX){ alert('No se pudo cargar la librería de Excel. Revisá tu conexión.'); return; }
   const list=sorted(), EXTRA=20, N=list.length+EXTRA, W=state.weeks, C=XLSX.utils.encode_col;
@@ -858,7 +1038,7 @@ document.getElementById('xlsBtn').onclick = () => {
 
 /* =================== INICIO =================== */
 (async function boot(){
-  renderNav(); setHeader();
+  renderNav(); setHeader(); updateUndo();
   if(!CLOUD){
     state = loadLocal(KEY) || loadLocal('rutina-gym-v1') || defaults();
     setSync('local'); render(); return;
